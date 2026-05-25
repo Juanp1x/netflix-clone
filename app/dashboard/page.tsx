@@ -6,6 +6,8 @@ import {
   getImageUrl,
 } from '@/lib/tmdb';
 
+import { supabase } from '@/lib/supabaseClient';
+
 interface Movie {
   id: number;
   title: string;
@@ -15,50 +17,121 @@ interface Movie {
 
 export default function DashboardPage() {
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [favorites, setFavorites] = useState<Movie[]>([]);
+  const [favorites, setFavorites] = useState<number[]>([]);
+  const [userId, setUserId] =
+    useState<string>('');
 
   useEffect(() => {
+    getUser();
     loadMovies();
-
-    const savedFavorites = localStorage.getItem(
-      'favorites'
-    );
-
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites));
-    }
   }, []);
 
+  const getUser = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      setUserId(user.id);
+      loadFavorites(user.id);
+    }
+  };
+
   const loadMovies = async () => {
-    const data = await getTrendingMovies();
+    const data =
+      await getTrendingMovies();
+
     setMovies(data);
   };
 
-  const toggleFavorite = (movie: Movie) => {
-    const exists = favorites.find(
-      (fav) => fav.id === movie.id
-    );
+  const loadFavorites = async (
+    userId: string
+  ) => {
+    const { data } = await supabase
+      .from('favorites')
+      .select('movie_id')
+      .eq('user_id', userId);
 
-    let updatedFavorites;
-
-    if (exists) {
-      updatedFavorites = favorites.filter(
-        (fav) => fav.id !== movie.id
+    if (data) {
+      setFavorites(
+        data.map(
+          (movie) => movie.movie_id
+        )
       );
-    } else {
-      updatedFavorites = [...favorites, movie];
     }
-
-    setFavorites(updatedFavorites);
-
-    localStorage.setItem(
-      'favorites',
-      JSON.stringify(updatedFavorites)
-    );
   };
 
-  const isFavorite = (id: number) => {
-    return favorites.some((fav) => fav.id === id);
+  const toggleFavorite = async (
+    movie: Movie
+  ) => {
+    const exists =
+      favorites.includes(movie.id);
+
+    // ELIMINAR
+    if (exists) {
+      const { error } =
+        await supabase
+          .from('favorites')
+          .delete()
+          .eq('user_id', userId)
+          .eq('movie_id', movie.id);
+
+      if (!error) {
+        setFavorites((prev) =>
+          prev.filter(
+            (id) => id !== movie.id
+          )
+        );
+      }
+
+      return;
+    }
+
+    // VERIFICAR DUPLICADO
+    const {
+      data: existingMovie,
+    } = await supabase
+      .from('favorites')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('movie_id', movie.id)
+      .maybeSingle();
+
+    if (existingMovie) {
+      return;
+    }
+
+    // INSERTAR
+    const { error } =
+      await supabase
+        .from('favorites')
+        .insert([
+          {
+            user_id: userId,
+            movie_id: movie.id,
+            movie_title:
+              movie.title,
+            movie_poster:
+              getImageUrl(
+                movie.poster_path
+              ),
+          },
+        ]);
+
+    if (!error) {
+      setFavorites((prev) => [
+        ...prev,
+        movie.id,
+      ]);
+    } else {
+      console.log(error);
+    }
+  };
+
+  const isFavorite = (
+    id: number
+  ) => {
+    return favorites.includes(id);
   };
 
   const featuredMovie = movies[0];
@@ -100,18 +173,24 @@ export default function DashboardPage() {
               className="relative group overflow-hidden rounded-lg"
             >
               <img
-                src={getImageUrl(movie.poster_path)}
+                src={getImageUrl(
+                  movie.poster_path
+                )}
                 alt={movie.title}
                 className="w-full h-80 object-cover group-hover:scale-105 transition"
               />
 
               <button
                 onClick={() =>
-                  toggleFavorite(movie)
+                  toggleFavorite(
+                    movie
+                  )
                 }
                 className="absolute top-3 right-3 z-20 bg-black/70 w-10 h-10 rounded-full flex items-center justify-center text-2xl hover:scale-110 transition"
               >
-                {isFavorite(movie.id)
+                {isFavorite(
+                  movie.id
+                )
                   ? '❤️'
                   : '🤍'}
               </button>
