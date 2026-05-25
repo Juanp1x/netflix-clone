@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Home() {
   return (
     <section className="relative h-screen overflow-hidden">
@@ -16,17 +18,23 @@ export default function Home() {
           </h1>
 
           <p className="text-xl text-zinc-300 mb-8">
-            Disfruta donde quieras. Cancela cuando quieras.
+            Disfruta donde quieras.
           </p>
 
           <div className="flex gap-4">
-            <button className="bg-red-600 hover:bg-red-700 transition px-8 py-4 rounded text-lg font-bold">
-              Ver ahora
-            </button>
+            <Link
+              href="/dashboard"
+              className="bg-red-600 hover:bg-red-700 transition px-8 py-4 rounded text-lg font-bold"
+            >
+              Explorar
+            </Link>
 
-            <button className="bg-zinc-700/70 hover:bg-zinc-600 transition px-8 py-4 rounded text-lg font-bold">
-              Más información
-            </button>
+            <Link
+              href="/login"
+              className="bg-zinc-700/70 hover:bg-zinc-600 transition px-8 py-4 rounded text-lg font-bold"
+            >
+              Iniciar sesión
+            </Link>
           </div>
         </div>
       </div>

@@ -40,31 +40,39 @@ export default function RootLayout({
               NETFLIX
             </Link>
 
-            <nav className="flex gap-6 text-sm font-medium">
-              <Link href="/" className="hover:text-red-500">
-                Inicio
-              </Link>
+       <nav className="flex gap-6 text-sm font-medium">
+  <Link href="/" className="hover:text-red-500">
+    Inicio
+  </Link>
 
-              <Link href="/dashboard" className="hover:text-red-500">
-                Dashboard
-              </Link>
+  <Link
+    href="/dashboard"
+    className="hover:text-red-500"
+  >
+    Dashboard
+  </Link>
 
-              <Link href="/search" className="hover:text-red-500">
-                Buscar
-              </Link>
+  <Link
+    href="/search"
+    className="hover:text-red-500"
+  >
+    Buscar
+  </Link>
 
-              <Link href="/favorites" className="hover:text-red-500">
-                Favoritos
-              </Link>
+  <Link
+    href="/favorites"
+    className="hover:text-red-500"
+  >
+    Favoritos
+  </Link>
 
-              <Link href="/login" className="hover:text-red-500">
-                Login
-              </Link>
-              
-              <Link href="/profile" className="hover:text-red-500">
-                Perfil
-              </Link>
-            </nav>
+  <Link
+    href="/profile"
+    className="hover:text-red-500"
+  >
+    Perfil
+  </Link>
+</nav>
 
           </div>
         </header>

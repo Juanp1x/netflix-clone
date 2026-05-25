@@ -1,7 +1,7 @@
 export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
-      <div className="bg-zinc-900 rounded-2xl p-10 w-full max-w-md border border-zinc-800">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-10 w-full max-w-md">
         <div className="flex flex-col items-center">
           <img
             src="https://i.pravatar.cc/300"
@@ -17,7 +17,7 @@ export default function ProfilePage() {
             usuario@email.com
           </p>
 
-          <button className="bg-red-600 hover:bg-red-700 transition px-6 py-3 rounded font-bold w-full">
+          <button className="w-full bg-red-600 hover:bg-red-700 transition py-3 rounded font-bold">
             Editar perfil
           </button>
         </div>

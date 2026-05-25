@@ -1,22 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { getImageUrl } from '@/lib/tmdb';
+
+const API_KEY = 'TU_API_KEY_TMDB';
+
+interface Movie {
+  id: number;
+  title: string;
+  poster_path: string;
+}
 
 export default function SearchPage() {
-  const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+  const [movies, setMovies] = useState<Movie[]>([]);
 
-  const movies = [
-    'Interstellar',
-    'Batman',
-    'Joker',
-    'Avengers',
-    'Breaking Bad',
-    'Dark',
-  ];
+  useEffect(() => {
+    if (query.length > 2) {
+      searchMovies();
+    }
+  }, [query]);
 
-  const filteredMovies = movies.filter((movie) =>
-    movie.toLowerCase().includes(search.toLowerCase())
-  );
+  const searchMovies = async () => {
+    const response = await axios.get(
+      `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&language=es-ES&query=${query}`
+    );
+
+    setMovies(response.data.results);
+  };
 
   return (
     <div className="min-h-screen bg-black text-white px-8 py-10">
@@ -26,21 +38,31 @@ export default function SearchPage() {
 
       <input
         type="text"
-        placeholder="Buscar películas o series..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Buscar películas..."
+        value={query}
+        onChange={(e) =>
+          setQuery(e.target.value)
+        }
         className="w-full bg-zinc-900 border border-zinc-700 rounded p-4 outline-none mb-8"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {filteredMovies.map((movie) => (
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        {movies.map((movie) => (
           <div
-            key={movie}
-            className="bg-zinc-900 p-6 rounded-lg hover:bg-zinc-800 transition"
+            key={movie.id}
+            className="overflow-hidden rounded-lg"
           >
-            <h2 className="text-xl font-bold">
-              {movie}
-            </h2>
+            <img
+              src={getImageUrl(movie.poster_path)}
+              alt={movie.title}
+              className="w-full h-80 object-cover"
+            />
+
+            <div className="bg-zinc-900 p-4">
+              <h2 className="font-bold">
+                {movie.title}
+              </h2>
+            </div>
           </div>
         ))}
       </div>
