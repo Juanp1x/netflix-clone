@@ -34,7 +34,7 @@ export default function LoginPage() {
         'Bienvenido, sesión iniciada correctamente.'
       );
 
-      router.push('/user');
+      router.push('/dashboard');
     }
   };
 
