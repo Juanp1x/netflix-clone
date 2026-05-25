@@ -45,12 +45,20 @@ export default function RootLayout({
                 Inicio
               </Link>
 
-              <Link href="/login" className="hover:text-red-500">
-                Login
+              <Link href="/dashboard" className="hover:text-red-500">
+                Dashboard
               </Link>
 
-              <Link href="/register" className="hover:text-red-500">
-                Registro
+              <Link href="/search" className="hover:text-red-500">
+                Buscar
+              </Link>
+
+              <Link href="/favorites" className="hover:text-red-500">
+                Favoritos
+              </Link>
+
+              <Link href="/login" className="hover:text-red-500">
+                Login
               </Link>
             </nav>
 
