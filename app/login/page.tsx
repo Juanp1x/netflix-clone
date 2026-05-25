@@ -5,9 +5,17 @@ import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState<string | null>(null);
+  const [email, setEmail] =
+    useState('');
+
+  const [password, setPassword] =
+    useState('');
+
+  const [message, setMessage] =
+    useState<string | null>(null);
+
+  const [loading, setLoading] =
+    useState(false);
 
   const router = useRouter();
 
@@ -16,7 +24,12 @@ export default function LoginPage() {
   ) => {
     e.preventDefault();
 
-    const { data, error } =
+    setLoading(true);
+
+    const {
+      data,
+      error,
+    } =
       await supabase.auth.signInWithPassword({
         email,
         password,
@@ -24,25 +37,32 @@ export default function LoginPage() {
 
     if (error) {
       setMessage(
-        'Error al iniciar sesión: ' + error.message
+        'Error al iniciar sesión: ' +
+          error.message
       );
+
+      setLoading(false);
       return;
     }
 
     if (data.user) {
       setMessage(
-        'Bienvenido, sesión iniciada correctamente.'
+        'Bienvenido.'
       );
 
-      router.push('/dashboard');
+      // ESPERAR A QUE SUPABASE GUARDE SESIÓN
+      setTimeout(() => {
+        window.location.href =
+          '/dashboard';
+      }, 500);
     }
   };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">
-      
+
       <div className="w-96 bg-zinc-900 p-10 rounded-lg flex flex-col gap-4">
-        
+
         <h1 className="text-white text-3xl font-bold mb-2">
           Iniciar sesión
         </h1>
@@ -51,14 +71,16 @@ export default function LoginPage() {
           onSubmit={handleLogin}
           className="flex flex-col gap-4"
         >
-          
+
           <input
             className="bg-zinc-700 text-white rounded p-3 text-sm outline-none"
             placeholder="Correo electrónico"
             type="email"
             value={email}
             onChange={(e) =>
-              setEmail(e.target.value)
+              setEmail(
+                e.target.value
+              )
             }
             required
           />
@@ -69,16 +91,21 @@ export default function LoginPage() {
             type="password"
             value={password}
             onChange={(e) =>
-              setPassword(e.target.value)
+              setPassword(
+                e.target.value
+              )
             }
             required
           />
 
           <button
             type="submit"
-            className="bg-red-600 text-white rounded py-3 font-bold hover:bg-red-700"
+            disabled={loading}
+            className="bg-red-600 text-white rounded py-3 font-bold hover:bg-red-700 disabled:opacity-50"
           >
-            Iniciar sesión
+            {loading
+              ? 'Ingresando...'
+              : 'Iniciar sesión'}
           </button>
         </form>
 
@@ -87,7 +114,9 @@ export default function LoginPage() {
 
           <button
             onClick={() =>
-              router.push('/register')
+              router.push(
+                '/register'
+              )
             }
             className="text-white underline"
           >

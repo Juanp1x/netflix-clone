@@ -1,44 +1,84 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getImageUrl } from '@/lib/tmdb';
+import { supabase } from '@/lib/supabaseClient';
 
-interface Movie {
-  id: number;
-  title: string;
-  poster_path: string;
+interface Favorite {
+  id: string;
+  movie_id: number;
+  movie_title: string;
+  movie_poster: string;
 }
 
 export default function FavoritesPage() {
-  const [favorites, setFavorites] = useState<Movie[]>([]);
+  const [favorites, setFavorites] =
+    useState<Favorite[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
-    const savedFavorites = localStorage.getItem(
-      'favorites'
-    );
-
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites));
-    }
+    loadFavorites();
   }, []);
 
-  const removeFavorite = (id: number) => {
-    const updatedFavorites = favorites.filter(
-      (movie) => movie.id !== id
-    );
+  const loadFavorites = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    setFavorites(updatedFavorites);
+    if (!user) return;
 
-    localStorage.setItem(
-      'favorites',
-      JSON.stringify(updatedFavorites)
-    );
+    const { data, error } =
+      await supabase
+        .from('favorites')
+        .select('*')
+        .eq('user_id', user.id);
+
+    if (!error && data) {
+      setFavorites(data);
+    }
+
+    setLoading(false);
   };
+
+  const removeFavorite = async (
+    movieId: number
+  ) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const { error } =
+      await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('movie_id', movieId);
+
+    if (!error) {
+      setFavorites((prev) =>
+        prev.filter(
+          (movie) =>
+            movie.movie_id !== movieId
+        )
+      );
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex justify-center items-center">
+        Cargando favoritos...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white px-8 py-10">
       <h1 className="text-4xl font-bold mb-8">
-        Favoritos
+        Mis Favoritos
       </h1>
 
       {favorites.length === 0 ? (
@@ -50,26 +90,34 @@ export default function FavoritesPage() {
           {favorites.map((movie) => (
             <div
               key={movie.id}
-              className="relative overflow-hidden rounded-lg"
+              className="relative overflow-hidden rounded-xl bg-zinc-900 hover:scale-105 transition"
             >
               <img
-                src={getImageUrl(movie.poster_path)}
-                alt={movie.title}
+                src={
+                  movie.movie_poster
+                }
+                alt={
+                  movie.movie_title
+                }
                 className="w-full h-80 object-cover"
               />
 
               <button
                 onClick={() =>
-                  removeFavorite(movie.id)
+                  removeFavorite(
+                    movie.movie_id
+                  )
                 }
                 className="absolute top-3 right-3 bg-black/70 w-10 h-10 rounded-full flex items-center justify-center text-2xl"
               >
                 ❤️
               </button>
 
-              <div className="absolute inset-0 bg-black/40 flex items-end p-4">
+              <div className="p-4">
                 <h2 className="font-bold text-lg">
-                  {movie.title}
+                  {
+                    movie.movie_title
+                  }
                 </h2>
               </div>
             </div>

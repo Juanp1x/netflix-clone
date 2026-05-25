@@ -1,74 +1,173 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
-import type { User } from "@supabase/supabase-js";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import {
+  useRouter,
+  usePathname,
+} from 'next/navigation';
 
-const PUBLIC_ROUTES = ["/login", "/register"];
+import { supabase } from '@/lib/supabaseClient';
+
+import type { User } from '@supabase/supabase-js';
+
+const PUBLIC_ROUTES = [
+  '/login',
+  '/register',
+];
 
 export default function Header() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] =
+    useState<User | null>(null);
+
+  const [isAdmin, setIsAdmin] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(true);
+
   const router = useRouter();
-  const pathname = usePathname();
+
+  const pathname =
+    usePathname();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
+    const {
+      data: { subscription },
+    } =
+      supabase.auth.onAuthStateChange(
+        () => {
+          checkSession();
+        }
+      );
 
-    return () => subscription.unsubscribe();
+    return () =>
+      subscription.unsubscribe();
   }, []);
 
+  const checkSession =
+    async () => {
+      const {
+        data: { session },
+      } =
+        await supabase.auth.getSession();
+
+      const currentUser =
+        session?.user ?? null;
+
+      setUser(currentUser);
+
+      if (currentUser) {
+        const {
+          data: profile,
+        } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq(
+            'id',
+            currentUser.id
+          )
+          .single();
+
+        setIsAdmin(
+          profile?.role ===
+            'admin'
+        );
+      } else {
+        setIsAdmin(false);
+      }
+
+      setLoading(false);
+    };
+
   useEffect(() => {
-    if (!loading && !user && !PUBLIC_ROUTES.includes(pathname)) {
-      router.push("/login");
+    if (
+      !loading &&
+      !user &&
+      !PUBLIC_ROUTES.includes(
+        pathname
+      )
+    ) {
+      router.push('/login');
     }
-  }, [user, loading, pathname]);
+  }, [
+    user,
+    loading,
+    pathname,
+    router,
+  ]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
-  };
+  const handleLogout =
+    async () => {
+      await supabase.auth.signOut();
 
-  // No mostrar header en rutas públicas
-  if (PUBLIC_ROUTES.includes(pathname)) return null;
+      window.location.href =
+        '/login';
+    };
 
-  // No mostrar nada mientras carga
-  if (loading) return null;
+  if (
+    PUBLIC_ROUTES.includes(
+      pathname
+    )
+  ) {
+    return null;
+  }
 
-  // No mostrar si no hay sesión
-  if (!user) return null;
+  if (loading) {
+    return null;
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-black/70 backdrop-blur-sm border-b border-zinc-800">
+    <header className="fixed top-0 left-0 w-full z-50 bg-black/80 backdrop-blur border-b border-zinc-800">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-8 py-4">
 
-        <Link href="/" className="text-red-600 text-4xl font-bold tracking-wide">
+        <Link
+          href="/dashboard"
+          className="text-red-600 text-4xl font-bold"
+        >
           NETFLIX
         </Link>
 
-        <nav className="flex gap-6 text-sm font-medium items-center">
-          <Link href="/" className="hover:text-red-500">Inicio</Link>
-          <Link href="/dashboard" className="hover:text-red-500">Dashboard</Link>
-          <Link href="/search" className="hover:text-red-500">Buscar</Link>
-          <Link href="/favorites" className="hover:text-red-500">Favoritos</Link>
-          <Link href="/profile" className="hover:text-red-500">Perfil</Link>
+        <nav className="flex gap-6 items-center text-sm">
+
+          <Link href="/dashboard">
+            Inicio
+          </Link>
+
+          <Link href="/search">
+            Buscar
+          </Link>
+
+          <Link href="/favorites">
+            Favoritos
+          </Link>
+
+          <Link href="/profile">
+            Perfil
+          </Link>
+
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="text-red-500"
+            >
+              Admin
+            </Link>
+          )}
+
           <button
             onClick={handleLogout}
-            className="text-zinc-400 hover:text-red-500 transition"
+            className="text-zinc-400 hover:text-red-500"
           >
             Cerrar sesión
           </button>
         </nav>
-
       </div>
     </header>
   );
